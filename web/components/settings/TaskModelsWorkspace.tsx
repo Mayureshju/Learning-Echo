@@ -226,7 +226,7 @@ export function TaskModelsWorkspace() {
       <SettingSection
         title={t("Global task model")}
         description={t(
-          "Every call DeepTutor makes on its own runs here unless the task below names its own model.",
+          "Every call LearnLoop makes on its own runs here unless the task below names its own model.",
         )}
       >
         <SettingRow

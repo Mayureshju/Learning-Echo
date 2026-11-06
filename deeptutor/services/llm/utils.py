@@ -121,7 +121,7 @@ def unreachable_endpoint_hint(base_url: str | None) -> str:
 
     if loopback and running_in_container():
         return (
-            f"DeepTutor is running in a container, where {hostname}{port} is the container "
+            f"LearnLoop is running in a container, where {hostname}{port} is the container "
             "itself — not the machine serving the model. Point the provider's Base URL at "
             f"host.docker.internal{port} (start the container with "
             "--add-host=host.docker.internal:host-gateway on Linux)."

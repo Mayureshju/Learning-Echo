@@ -832,7 +832,7 @@ function MarkItDownPanel({
       <SettingRow
         title={t("Describe images with the vision model")}
         description={t(
-          "Reserved — uses DeepTutor's vision model to caption images during conversion.",
+          "Reserved — uses LearnLoop's vision model to caption images during conversion.",
         )}
         control={
           <Toggle
@@ -1265,7 +1265,7 @@ function NotInstalledSection({
   return (
     <SettingSection
       title={title}
-      description={t("This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while DeepTutor is running.")}
+      description={t("This local parser is not installed. Choose the instructions for your server deployment; packages cannot be installed while LearnLoop is running.")}
     >
       <div className="space-y-4 px-1 pb-4 text-[12px] leading-relaxed text-[var(--muted-foreground)]">
         <div>
@@ -1276,12 +1276,12 @@ function NotInstalledSection({
         </div>
         <div>
           <h3 className="font-medium text-[var(--foreground)]">{t("Source checkout")}</h3>
-          <p>{t("Stop DeepTutor. Run from the checkout in the server's Python environment, then restart the same instance.")}</p>
+          <p>{t("Stop LearnLoop. Run from the checkout in the server's Python environment, then restart the same instance.")}</p>
           <code className={commandClass}>python scripts/install_extras.py parse-{engineId}</code>
         </div>
         <div>
           <h3 className="font-medium text-[var(--foreground)]">{t("Wheel installation")}</h3>
-          <p>{t("Stop DeepTutor. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.")}</p>
+          <p>{t("Stop LearnLoop. Run in the server's Python environment, then restart with the same runtime home. Do not run this over a source checkout.")}</p>
           <code className={commandClass}>deeptutor module install parser-{engineId}</code>
         </div>
       </div>

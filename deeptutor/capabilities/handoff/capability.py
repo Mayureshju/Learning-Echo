@@ -59,7 +59,7 @@ _PARTNER_DROPPED = frozenset(
 # user has not written their own in /settings. The consult default tells the
 # agent it is being questioned by DeepTutor; here it is talking to the user.
 _HANDOFF_INSTRUCTION = (
-    "You are answering the user directly inside their DeepTutor conversation, "
+    "You are answering the user directly inside their LearnLoop conversation, "
     "not in an interactive terminal. Your reply is shown to them as the answer. "
     "Work the request through, then answer clearly and completely. Do not wait "
     "for input; if something is ambiguous, state your assumption and proceed."
@@ -218,7 +218,7 @@ class _Writer:
 class HandoffCapability(TurnCapability):
     manifest = CapabilityManifest(
         name=SOURCE,
-        description="A partner or a connected agent answers the turn in DeepTutor's place.",
+        description="A partner or a connected agent answers the turn in LearnLoop's place.",
         stages=[STAGE],
     )
 

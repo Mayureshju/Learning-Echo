@@ -1,4 +1,4 @@
-"""Manage the modules in the current DeepTutor environment."""
+"""Manage the modules in the current LearnLoop environment."""
 
 import json
 from pathlib import Path

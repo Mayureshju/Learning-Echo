@@ -129,10 +129,10 @@ class BackgroundJobManager:
                 "preserving other extras; recreate the same service with its existing "
                 "configuration and mounts. Startup reapplies extras; inspect startup "
                 "logs for installation failures, then recheck availability. "
-                "Source checkout: stop DeepTutor, run `python scripts/install_extras.py parse-"
+                "Source checkout: stop LearnLoop, run `python scripts/install_extras.py parse-"
                 + engine
                 + "` from the checkout in the server's Python environment, then restart. "
-                "Wheel installation: stop DeepTutor, run `deeptutor module install parser-"
+                "Wheel installation: stop LearnLoop, run `deeptutor module install parser-"
                 + engine
                 + "` in the server's Python environment, then restart. "
                 "Data mounts preserve user data, not installed Python packages."

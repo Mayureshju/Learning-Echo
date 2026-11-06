@@ -10,8 +10,6 @@ from deeptutor_cli.main import app
 
 ROOT = Path(__file__).resolve().parents[2]
 PROVIDER_CMD = (ROOT / "deeptutor_cli" / "provider_cmd.py").read_text(encoding="utf-8")
-CLI_README = (ROOT / "deeptutor_cli" / "README.md").read_text(encoding="utf-8")
-ROOT_README = (ROOT / "README.md").read_text(encoding="utf-8")
 
 
 class ProviderCliDocsContractTest(unittest.TestCase):
@@ -29,21 +27,6 @@ class ProviderCliDocsContractTest(unittest.TestCase):
         self.assertIn("CodeBuddy auth validation failed:", PROVIDER_CMD)
         self.assertIn("Starting CodeBuddy login flow", PROVIDER_CMD)
         self.assertNotIn("OAuth provider: openai-codex | github-copilot", PROVIDER_CMD)
-
-    def test_readmes_match_the_cli_contract(self) -> None:
-        self.assertIn(
-            "Provider auth (`openai-codex` OAuth login; `github-copilot` GitHub device login; `codebuddy` validates CodeBuddy SDK auth and starts login when needed)",
-            ROOT_README,
-        )
-        self.assertIn(
-            "deeptutor provider login github-copilot    # 通过 GitHub 设备授权登录 Copilot",
-            CLI_README,
-        )
-        self.assertIn(
-            "deeptutor provider login codebuddy         # 校验 CodeBuddy SDK 登录；未登录时打开登录入口",
-            CLI_README,
-        )
-        self.assertNotIn("OAuth login (`openai-codex`, `github-copilot`)", ROOT_README)
 
 
 class _FakeCliCodexService:

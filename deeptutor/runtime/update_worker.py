@@ -133,7 +133,7 @@ def _log_aborted_recovery(
         "update worker: recovery aborted; update state could not be loaded "
         f"({type(load_error).__name__}: {load_error}). "
         f"Original failure: {type(original).__name__}: {original}. "
-        "The job state was left untouched; inspect it before restarting DeepTutor.\n"
+        "The job state was left untouched; inspect it before restarting LearnLoop.\n"
     )
     try:
         with store.log_path.open("a", encoding="utf-8") as log:
@@ -206,7 +206,7 @@ def run_update_worker(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Apply a managed DeepTutor update")
+    parser = argparse.ArgumentParser(description="Apply a managed LearnLoop update")
     parser.add_argument("--store-root", type=Path, required=True)
     parser.add_argument("--parent-pid", type=int, required=True)
     args = parser.parse_args()

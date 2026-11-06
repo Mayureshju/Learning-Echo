@@ -1061,7 +1061,7 @@ def _resolve_frontend(
     node = shutil.which("node")
     if packaged is not None:
         if not node:
-            raise SystemExit("Node.js 20+ is required to run the packaged DeepTutor Web app.")
+            raise SystemExit("Node.js 20+ is required to run the packaged LearnLoop Web app.")
         runtime_web = _copy_packaged_web_if_needed(
             packaged,
             home=home,
@@ -1098,7 +1098,7 @@ def _resolve_frontend(
         )
 
     raise SystemExit(
-        "DeepTutor Web assets are not installed. Install the full app with `pip install -U deeptutor`, "
+        "LearnLoop Web assets are not installed. Install the full app with `pip install -U deeptutor`, "
         "or run from a source checkout that contains `web/`."
     )
 
@@ -1834,7 +1834,7 @@ def start(
         # durable failure instead of a job that polls forever.
         _fail_restarted_update(
             runtime_home,
-            "DeepTutor stopped before the update restart completed.",
+            "LearnLoop stopped before the update restart completed.",
         )
 
     if exit_code:

@@ -227,15 +227,11 @@ def test_office_skills_reuse_the_shared_workspace_contract() -> None:
         assert "python -c" not in text
 
 
-def test_docx_xlsx_dependencies_cover_pip_source_cli_and_docker() -> None:
+def test_docx_xlsx_dependencies_cover_pip_and_source_installs() -> None:
     root = Path(__file__).parents[2]
     import tomllib
 
     core = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]
-    cli = tomllib.loads(
-        (root / "packaging/deeptutor-cli/pyproject.toml").read_text(encoding="utf-8")
-    )["project"]
-    assert "dependencies" in cli["dynamic"]
 
     def requirements(path):
         lines = []
@@ -249,8 +245,7 @@ def test_docx_xlsx_dependencies_cover_pip_source_cli_and_docker() -> None:
     for deployment, text in {
         "core and CLI wheel": "\n".join(core["dependencies"]),
         "source CLI": requirements(root / "requirements/cli.txt"),
-        "full source and Docker": requirements(root / "requirements.txt"),
-        "docker runner": (root / "Dockerfile.runner").read_text(encoding="utf-8"),
+        "full source": requirements(root / "requirements.txt"),
     }.items():
         assert "python-docx" in text, deployment
         assert "openpyxl" in text, deployment

@@ -1562,7 +1562,7 @@ export function StreamingStatus({
     Boolean(isStreaming),
   );
 
-  const name = agentName?.trim() || "DeepTutor";
+  const name = agentName?.trim() || "LearnLoop";
   let modeLabel = t("{{name}} Reasoning…", { name });
   if (mode === "tool_using") modeLabel = t("Tool Calling…");
   else if (mode === "planning") modeLabel = t("{{name}} Planning…", { name });
@@ -1576,7 +1576,7 @@ export function StreamingStatus({
   else if (mode === "quizzing") modeLabel = t("{{name}} Quizzing…", { name });
   else if (mode === "reflecting")
     modeLabel = t("{{name}} Reflecting…", { name });
-  else if (mode === "responded") modeLabel = t("DeepTutor responded.");
+  else if (mode === "responded") modeLabel = t("LearnLoop responded.");
 
   const label =
     getExploreContextStatusLabel(events, t, Boolean(isStreaming)) ??

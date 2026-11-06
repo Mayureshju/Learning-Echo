@@ -1127,8 +1127,8 @@ export const AssistantMessage = memo(function AssistantMessage({
   return (
     <>
       {/* Activity block pinned to the TOP: the status header
-          ("DeepTutor Exploring… · 8s" → "DeepTutor responded. · 10s") with
-          the exploring trace nested beneath it — expanded while DeepTutor is
+          ("LearnLoop Exploring… · 8s" → "LearnLoop responded. · 10s") with
+          the exploring trace nested beneath it — expanded while LearnLoop is
           still working, collapsed once it settles into the final answer. */}
       <AssistantActivity
         events={events}

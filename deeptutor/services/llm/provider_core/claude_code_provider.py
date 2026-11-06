@@ -562,7 +562,7 @@ def _build_tool_options(sdk: ModuleType, tools: list[dict[str, Any]] | None) -> 
                 "content": [
                     {
                         "type": "text",
-                        "text": "Pending: DeepTutor runs this tool and sends its output in the next message.",
+                        "text": "Pending: LearnLoop runs this tool and sends its output in the next message.",
                     }
                 ]
             }

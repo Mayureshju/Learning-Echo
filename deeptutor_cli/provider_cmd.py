@@ -50,7 +50,7 @@ async def _login_openai_codex() -> None:
         typer.echo(f"Remote server tunnel command: {started['ssh_forward_command']}")
         typer.echo(
             "Opening the OpenAI Codex sign-in in your browser; "
-            "credentials are written only to DeepTutor's private directory."
+            "credentials are written only to LearnLoop's private directory."
         )
         if not webbrowser.open(authorize_url):
             typer.echo(f"The browser did not open automatically. Visit: {authorize_url}")
@@ -96,13 +96,13 @@ async def _login_github_copilot() -> None:
     except ImportError:
         typer.echo(
             "GitHub Copilot login dependencies are not installed. Install CLI deps: "
-            "python -m pip install -e ./packaging/deeptutor-cli"
+            "python -m pip install -r requirements/full.txt"
         )
         raise typer.Exit(code=1)
     try:
         token = await login_github_copilot(print_fn=typer.echo)
         typer.echo(
-            "GitHub sign-in saved in DeepTutor's owner-private storage. Validating Copilot..."
+            "GitHub sign-in saved in LearnLoop's owner-private storage. Validating Copilot..."
         )
         models = await list_github_copilot_models()
         if not models:

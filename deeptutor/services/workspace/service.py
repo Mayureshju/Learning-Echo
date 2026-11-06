@@ -461,7 +461,7 @@ class ContentWorkspaceService(WorkspaceCatalogMixin):
             path not in {"", "."}
             and _INTERNAL_DIR in PurePosixPath(_normalise_relative(path)).parts
         ):
-            raise WorkspaceError("DeepTutor's internal workspace files are not listable.")
+            raise WorkspaceError("LearnLoop's internal workspace files are not listable.")
         base = binding.root if path in {"", "."} else self.resolve(binding, path)
         if not base.is_dir():
             raise WorkspaceError("The requested workspace path is not a directory.")
@@ -523,7 +523,7 @@ class ContentWorkspaceService(WorkspaceCatalogMixin):
         if not candidate.is_file():
             raise WorkspaceError("The requested workspace path is not a file.")
         if _INTERNAL_DIR in PurePosixPath(_normalise_relative(path)).parts:
-            raise WorkspaceError("DeepTutor's internal workspace files are not readable.")
+            raise WorkspaceError("LearnLoop's internal workspace files are not readable.")
         start = max(0, int(offset))
         max_chars = max(1, min(int(limit), 100_000))
         try:
@@ -577,7 +577,7 @@ class ContentWorkspaceService(WorkspaceCatalogMixin):
             path not in {"", "."}
             and _INTERNAL_DIR in PurePosixPath(_normalise_relative(path)).parts
         ):
-            raise WorkspaceError("DeepTutor's internal workspace files are not searchable.")
+            raise WorkspaceError("LearnLoop's internal workspace files are not searchable.")
         base = binding.root if path in {"", "."} else self.resolve(binding, path)
         if not base.is_dir():
             raise WorkspaceError("The requested workspace path is not a directory.")
@@ -633,7 +633,7 @@ class ContentWorkspaceService(WorkspaceCatalogMixin):
         for raw in items:
             relative = _normalise_relative(str(raw.get("path") or ""))
             if _INTERNAL_DIR in PurePosixPath(relative).parts:
-                raise WorkspaceError("DeepTutor's internal workspace files cannot be presented.")
+                raise WorkspaceError("LearnLoop's internal workspace files cannot be presented.")
             source = self.resolve(binding, relative)
             if not source.is_file():
                 raise WorkspaceError(f"Workspace item is not a file: {relative}")
@@ -713,7 +713,7 @@ class ContentWorkspaceService(WorkspaceCatalogMixin):
         if PurePosixPath(destination_relative).parts[0] == "outputs":
             raise WorkspaceError("Files already under outputs do not need export authorization.")
         if _INTERNAL_DIR in PurePosixPath(destination_relative).parts:
-            raise WorkspaceError("DeepTutor's internal workspace files cannot be overwritten.")
+            raise WorkspaceError("LearnLoop's internal workspace files cannot be overwritten.")
         self._assert_no_symlink_components(
             binding, destination_relative, operation="export destination"
         )

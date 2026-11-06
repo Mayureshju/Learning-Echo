@@ -18,9 +18,9 @@ function phaseLabel(
 ): string {
   switch (phase) {
     case "uploading":
-      return t("Sending to DeepTutor");
+      return t("Sending to LearnLoop");
     case "received":
-      return t("Uploaded to DeepTutor");
+      return t("Uploaded to LearnLoop");
     case "submitting":
       return t("Sending to document parser");
     case "parsing":

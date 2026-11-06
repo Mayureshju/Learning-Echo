@@ -1,8 +1,8 @@
-# DeepTutor logo assets
+# LearnLoop logo assets
 
 The six `color-*` / `black-*` PNGs are the approved source artwork: `logo` is
 the standalone symbol, `word` is the wordmark, and `full` is the combined banner.
-The root README and translated READMEs use `color-full.png`.
+The root README uses `color-full.png`.
 
 After changing these sources, run:
 

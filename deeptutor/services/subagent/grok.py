@@ -36,7 +36,7 @@ from deeptutor.services.subagent.types import (
 logger = logging.getLogger(__name__)
 
 _NOT_FOUND_DETAIL = (
-    "Install xAI's Grok CLI on the DeepTutor server, sign in with `grok login`, "
+    "Install xAI's Grok CLI on the LearnLoop server, sign in with `grok login`, "
     "and ensure `grok` is on PATH. Requires native `--output-format streaming-json`."
 )
 

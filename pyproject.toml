@@ -48,6 +48,7 @@ dependencies = [
 
 [project.scripts]
 deeptutor = "deeptutor_cli.main:main"
+learnloop = "deeptutor_cli.main:main"
 
 [tool.deeptutor.optional-dependencies]
 # Optional modules own their code and dependencies. Full is an installation profile.

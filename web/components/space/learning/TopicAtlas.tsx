@@ -124,7 +124,7 @@ export function TopicAtlas({
           icon={<Compass size={28} />}
           title={t('Your atlas is still uncharted')}
           description={t(
-            'Tell DeepTutor what you want to learn, mix in your books, notes, and knowledge bases, and it will draft the first outline.'
+            'Tell LearnLoop what you want to learn, mix in your books, notes, and knowledge bases, and it will draft the first outline.'
           )}
           action={
             <button

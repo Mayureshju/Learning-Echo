@@ -1,0 +1,22 @@
+LearnLoop
+Copyright 2026 [Your Name]
+
+This product is a modified version of DeepTutor
+(https://github.com/HKUDS/DeepTutor),
+Copyright 2025 Data Intelligence Lab, The University of Hong Kong,
+licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Original authors (see CITATION.cff and CONTRIBUTORS.md):
+Bingxi Zhao, Jiahao Zhang, Xubin Ren, Zirui Guo, Tianzhe Chu, Yi Ma, Chao Huang.
+"DeepTutor: Towards Agentic Personalized Tutoring", arXiv:2604.26962, 2026.
+
+Changes made in this version (2026):
+- Removed deployment, CI, desktop-app packaging and upstream documentation
+  files that a local installation does not use.
+- Renamed the user-facing product name to "LearnLoop" and replaced the logo.
+  The internal Python packages keep their original names (deeptutor,
+  deeptutor_cli), and the `deeptutor` command still works.
+- Added Windows setup and start scripts (setup.bat, start.bat), a new README,
+  and a technical report in docs/.
+
+Third-party components and their licenses are listed in THIRD_PARTY_NOTICES.md.

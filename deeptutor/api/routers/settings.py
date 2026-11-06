@@ -1708,7 +1708,7 @@ async def test_mineru_connection(payload: MinerUSettingsUpdate):
             return {
                 "ok": False,
                 "message": (
-                    f"Local MinerU CLI reported {detail}. DeepTutor needs MinerU >= "
+                    f"Local MinerU CLI reported {detail}. LearnLoop needs MinerU >= "
                     f"{MIN_MINERU_VERSION}; upgrade with "
                     f"`pip install -U 'mineru[all]>={MIN_MINERU_VERSION}'`."
                 ),
@@ -2091,7 +2091,7 @@ async def fetch_models_from_provider(payload: FetchModelsPayload):
                 detail=(
                     "Could not list GitHub Copilot models. "
                     "Run: deeptutor provider login github-copilot "
-                    "for this account in the server's DeepTutor home, "
+                    "for this account in the server's LearnLoop home, "
                     "then retry. If already logged in, check Copilot access and connectivity."
                 ),
             ) from None
@@ -2493,7 +2493,7 @@ async def complete_tour(payload: TourCompletePayload | None = None):
 
     return {
         "status": "completed",
-        "message": "Configuration saved. DeepTutor will restart shortly.",
+        "message": "Configuration saved. LearnLoop will restart shortly.",
         "launch_at": launch_at,
         "redirect_at": redirect_at,
         "runtime": applied,

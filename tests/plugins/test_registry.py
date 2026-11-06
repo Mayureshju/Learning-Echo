@@ -71,7 +71,7 @@ def test_registry_reports_incompatible_and_broken_plugins(tmp_path) -> None:
     records = {record.id: record for record in registry.list_plugins(include_catalog=False)}
 
     assert records["org.author.future"].status == "incompatible"
-    assert "requires DeepTutor" in records["org.author.future"].error
+    assert "requires LearnLoop" in records["org.author.future"].error
     assert records["org.author.broken"].status == "broken"
 
 

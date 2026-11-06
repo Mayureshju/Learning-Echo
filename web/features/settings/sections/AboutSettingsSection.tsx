@@ -117,7 +117,7 @@ export default function AboutSettingsPage() {
       }
       if (cancelled) return;
       if (Date.now() >= deadline) {
-        setError(t("DeepTutor did not reconnect before the update timeout."));
+        setError(t("LearnLoop did not reconnect before the update timeout."));
         return;
       }
       timer = setTimeout(poll, POLL_INTERVAL_MS);
@@ -205,7 +205,7 @@ export default function AboutSettingsPage() {
       <SettingsPageHeader
         title={t("About")}
         description={t(
-          "DeepTutor version, release channel, and the safest update path for this installation.",
+          "LearnLoop version, release channel, and the safest update path for this installation.",
         )}
       />
 
@@ -281,7 +281,7 @@ export default function AboutSettingsPage() {
         <SettingRow
           title={t("Installation")}
           description={t(
-            status?.installation.reason || "How DeepTutor is installed here.",
+            status?.installation.reason || "How LearnLoop is installed here.",
           )}
           control={
             <span className="text-[12.5px] text-[var(--foreground)]">
@@ -305,7 +305,7 @@ export default function AboutSettingsPage() {
       <SettingSection
         title={t("Updates")}
         description={t(
-          "Version checks are cached for 24 hours. DeepTutor never installs an update without confirmation.",
+          "Version checks are cached for 24 hours. LearnLoop never installs an update without confirmation.",
         )}
       >
         <SettingRow
@@ -407,8 +407,8 @@ export default function AboutSettingsPage() {
 
       <SettingSection title={t("Project")}>
         <ResourceRow
-          title={t("GitHub")}
-          description={t("Source code, issues, and contributions")}
+          title={t("Based on DeepTutor")}
+          description={t("Open-source project by the HKU Data Intelligence Lab · Apache-2.0")}
           href="https://github.com/HKUDS/DeepTutor"
           icon={<Github className="h-4 w-4" />}
         />
@@ -422,7 +422,7 @@ export default function AboutSettingsPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title={t("Update and restart DeepTutor?")}
+        title={t("Update and restart LearnLoop?")}
         confirmLabel={t("Update and restart")}
         busy={requesting}
         busyLabel={t("Preparing update…")}
@@ -430,7 +430,7 @@ export default function AboutSettingsPage() {
         onCancel={() => setConfirmOpen(false)}
       >
         {t(
-          "DeepTutor will briefly stop, install {{version}}, and reopen with the same settings. Active conversations must finish first.",
+          "LearnLoop will briefly stop, install {{version}}, and reopen with the same settings. Active conversations must finish first.",
           { version: latestVersion ?? "" },
         )}
       </ConfirmDialog>

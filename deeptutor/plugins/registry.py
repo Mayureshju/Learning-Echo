@@ -435,7 +435,7 @@ class PluginRegistry:
 
     def _compatible(self, manifest: PluginManifestData) -> tuple[bool, str]:
         if not version_matches(self.deeptutor_version, manifest.compatibility.deeptutor):
-            return False, f"requires DeepTutor {manifest.compatibility.deeptutor}"
+            return False, f"requires LearnLoop {manifest.compatibility.deeptutor}"
         for extension in manifest.extensions:
             required = manifest.compatibility.api.get(extension.type)
             supported = HOST_API_VERSIONS.get(extension.type)

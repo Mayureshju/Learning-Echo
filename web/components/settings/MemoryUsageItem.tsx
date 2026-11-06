@@ -167,7 +167,7 @@ export default function MemoryUsageItem() {
         {usage.partial && (
           <Tooltip
             label={t(
-              "Only the backend and its own children. Start DeepTutor through the launcher to include the web server.",
+              "Only the backend and its own children. Start LearnLoop through the launcher to include the web server.",
             )}
             side="top"
           >

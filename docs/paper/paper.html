@@ -1,0 +1,705 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearnLoop Technical Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 17mm 15mm 19mm 15mm;
+    @bottom-center { content: counter(page); font: 9pt "Times New Roman", Times, serif; color: #333; }
+  }
+  :root { --ink: #111; --rule: #000; --muted: #444; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0; background: #fff; color: var(--ink);
+    font-family: "Times New Roman", Times, serif; font-size: 10pt; line-height: 1.3;
+  }
+  .title-block { text-align: center; margin: 0 0 5mm; }
+  .title-block h1 { font-size: 21pt; font-weight: bold; line-height: 1.15; margin: 0 0 2.5mm; }
+  .title-block .kind { font-size: 10pt; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 3mm; }
+  .title-block .author { font-size: 11.5pt; }
+  .title-block .affil { font-size: 9.5pt; font-style: italic; margin-top: 0.5mm; }
+  .columns {
+    column-count: 2; column-gap: 6.5mm; column-fill: balance;
+    text-align: justify; hyphens: auto; orphans: 3; widows: 3;
+  }
+  .abstract { font-size: 9pt; font-weight: bold; text-indent: 0; }
+  .abstract em.lead, .keywords em.lead { font-style: italic; }
+  .keywords { font-size: 9pt; font-weight: bold; text-indent: 0; margin-bottom: 3mm; }
+  h2 {
+    font-size: 10pt; font-weight: normal; font-variant: small-caps; letter-spacing: 0.04em;
+    text-align: center; margin: 4mm 0 1.6mm; break-after: avoid;
+  }
+  h3 { font-size: 10pt; font-style: italic; font-weight: normal; margin: 2.6mm 0 1mm; break-after: avoid; }
+  p { margin: 0 0 1.5mm; text-indent: 1.2em; }
+  h2 + p, h3 + p, .noindent { text-indent: 0; }
+  ul.contrib { margin: 0 0 1.6mm 0; padding-left: 4.5mm; }
+  ul.contrib li { margin-bottom: 0.7mm; }
+  code, .mono { font-family: "Courier New", Courier, monospace; font-size: 8.6pt; hyphens: none; -webkit-hyphens: none; }
+  .nowrap { white-space: nowrap; }
+  figure { margin: 3mm 0 3.5mm; break-inside: avoid; }
+  figure.wide { column-span: all; }
+  figure svg { width: 100%; height: auto; display: block; }
+  figcaption { font-size: 8.5pt; text-align: center; margin-top: 1.5mm; }
+  .table-wrap { margin: 2.5mm 0 3mm; break-inside: avoid; }
+  .table-wrap.wide { column-span: all; }
+  .tcap { font-size: 8.5pt; text-align: center; font-variant: small-caps; margin-bottom: 1mm; }
+  table { border-collapse: collapse; width: 100%; font-size: 8.4pt; line-height: 1.22; }
+  th, td { padding: 0.55mm 1.3mm; vertical-align: top; text-align: left; }
+  thead tr { border-top: 1.1px solid var(--rule); border-bottom: 0.6px solid var(--rule); }
+  tbody tr:last-child { border-bottom: 1.1px solid var(--rule); }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  .eq { margin: 2mm 0 2.5mm; display: flex; align-items: center; justify-content: center; gap: 4mm; }
+  .eq .tag { font-size: 9pt; }
+  math { font-size: 10.5pt; }
+  .refs { font-size: 8.4pt; padding-left: 6mm; margin: 0; }
+  .refs li { margin-bottom: 1mm; text-align: left; }
+  .ack { text-indent: 0; font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<header class="title-block">
+  <div class="kind">Project Report</div>
+  <h1>LearnLoop: Adapting an Open-Source Agentic AI Tutor<br>for Local Deployment</h1>
+  <div class="author">[Your Name]</div>
+  <div class="affil">[Department, College] · [email address]</div>
+  <div class="affil">November 2026</div>
+</header>
+
+<div class="columns">
+
+<p class="abstract"><em class="lead">Abstract</em>—Large language models (LLMs) make it plausible to give every
+learner a patient tutor that is always available, but most AI tutors are hosted services whose data, cost and
+availability the learner does not control. This report presents LearnLoop, a locally deployed adaptation of
+DeepTutor [1], an open-source, agent-native tutoring system from the Data Intelligence Lab at The University of
+Hong Kong. We make three contributions. First, we analyse the architecture of the system as it exists in code:
+a durable turn service shared by three entry points, a two-layer plugin model that separates single-shot tools
+from multi-stage capabilities, a typed streaming event protocol, pluggable retrieval-augmented knowledge bases,
+a three-layer learner memory and a recency-weighted mastery model. Second, we describe how we adapted the system
+for a self-contained installation on Windows and macOS: we removed 306 files that a local installation does not use
+(deployment, desktop packaging, release automation and upstream documentation), renamed the user-facing product through a consistent
+translation-key transform, and added one-step setup and start scripts. Third, we evaluate the adaptation by
+regression testing against the unmodified upstream release on the same machine: the remaining 12,774 Python
+tests and 2,560 frontend tests give the same results as before, with no new failures, and the production web build
+and an end-to-end conversation succeed. We close with the limitations of this work, notably the absence of a learner
+study, and propose an evaluation protocol.</p>
+
+<p class="keywords"><em class="lead">Index Terms</em>—intelligent tutoring systems, large language models, LLM agents,
+retrieval-augmented generation, learner modelling, local deployment.</p>
+
+<h2>1. Introduction</h2>
+
+<p>One-to-one tutoring is among the most effective forms of instruction. Bloom reported that students tutored
+individually performed about two standard deviations above students taught conventionally, and posed the
+search for methods of group instruction as effective as tutoring as the "2 sigma problem" [2]. Intelligent
+tutoring systems (ITS) have closed part of that gap: in VanLehn's review, step-based tutoring systems were
+nearly as effective as human tutors [3]. LLMs have renewed interest in the problem because they can hold an
+open-ended dialogue about almost any subject [10].</p>
+
+<p>An LLM on its own is not yet a tutor. It can state falsehoods fluently, it cannot see the learner's own
+course material, it forgets everything between sessions, and it has no model of what the learner already
+knows. Recent systems address these gaps by letting the model reason in steps and act through tools [6]–[8],
+by grounding answers in retrieved documents [5], [9], and by keeping persistent state about the learner.
+DeepTutor [1] combines these ideas in one open-source system with a web interface, a command line and a
+Python SDK.</p>
+
+<p>Our goal in this project was practical: run such a system entirely on a student's own laptop, including
+Windows, under a distinct name suitable for a course project, without breaking any of its functionality.
+Running locally keeps learning data on the device, allows offline use with a local model server, and leaves
+the cost of model calls under the learner's control. This report makes three contributions:</p>
+<ul class="contrib">
+  <li>an architectural analysis of DeepTutor's runtime, derived from its source code (Sections 3–5);</li>
+  <li>a documented, reproducible adaptation for local deployment, LearnLoop (Section 6);</li>
+  <li>a regression-based evaluation showing that the adaptation preserves the system's tested behaviour
+      (Section 7).</li>
+</ul>
+<p class="noindent">Section 2 reviews related work, Section 8 discusses limitations and future work, and Section 9
+concludes. We did not change any of DeepTutor's algorithms; Sections 3–5 describe the upstream design.</p>
+
+<h2>2. Background and Related Work</h2>
+
+<h3>2.1 Tutoring and learner modelling</h3>
+<p>Mastery learning holds that a learner should demonstrate command of a unit before moving on, and Bloom's
+two-sigma result [2] is its best-known motivation. To decide when a skill is mastered, a tutor needs a learner
+model. Bayesian Knowledge Tracing (BKT) treats knowledge of each skill as a hidden binary state and updates
+the probability that it has been learned after every correct or incorrect response, using learn, guess and
+slip parameters [4]. VanLehn's review [3] attributes much of the effectiveness of tutoring systems to such
+fine-grained, step-level feedback.</p>
+
+<h3>2.2 LLM agents and tool use</h3>
+<p>Chain-of-thought prompting showed that asking a model for intermediate reasoning steps improves multi-step
+reasoning [6]. ReAct interleaves such reasoning traces with actions on external tools, so that observations
+from the environment can correct the model's plan [7]. Toolformer showed that a model can learn when and how
+to call external APIs [8]. The agent loop at the centre of DeepTutor's chat capability follows this
+reason-act-observe pattern.</p>
+
+<h3>2.3 Retrieval-augmented generation</h3>
+<p>Retrieval-augmented generation (RAG) pairs a generator with a retriever over a document index, so that
+answers can draw on and cite external knowledge [5]. LightRAG extends the index with a graph of entities and
+relations and retrieves at two levels of granularity [9]. Retrieval matters especially in tutoring, where an
+answer should come from the learner's own textbook rather than from the model's general knowledge.</p>
+
+<h3>2.4 LLMs in education</h3>
+<p>Kasneci et al. survey the opportunities LLMs offer education, such as personalised explanations and
+generated practice, together with risks including fabricated content, over-reliance, threats to academic
+integrity and privacy [10]. Several of these risks inform the design choices discussed in Sections 5 and 8.</p>
+
+<h3>2.5 DeepTutor</h3>
+<p>DeepTutor [1] is released under the Apache License 2.0 by the Data Intelligence Lab at The University of
+Hong Kong. LearnLoop is a modified version of its 1.7.2 release. Apache-2.0 permits modification and
+redistribution provided that the licence, the copyright notices and a statement of changes are retained;
+LearnLoop keeps all three (Section 6.3).</p>
+
+<figure class="wide">
+<svg viewBox="0 0 760 404" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif" font-size="12" role="img" aria-label="System architecture">
+  <defs>
+    <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+  <g stroke="#334155" stroke-width="1.3" fill="none">
+    <line x1="105" y1="54" x2="105" y2="84" marker-end="url(#a1)"/>
+    <line x1="295" y1="54" x2="295" y2="84" marker-end="url(#a1)"/>
+    <line x1="485" y1="54" x2="485" y2="84" marker-end="url(#a1)"/>
+    <line x1="295" y1="134" x2="295" y2="162" marker-end="url(#a1)"/>
+    <line x1="145" y1="212" x2="145" y2="240" marker-end="url(#a1)"/>
+    <line x1="445" y1="212" x2="445" y2="240" marker-end="url(#a1)"/>
+    <line x1="320" y1="269" x2="272" y2="269" marker-end="url(#a1)"/>
+    <line x1="570" y1="188" x2="598" y2="188" marker-end="url(#a1)"/>
+    <line x1="670" y1="164" x2="670" y2="136" marker-end="url(#a1)"/>
+    <path d="M670,86 V32 H572" marker-end="url(#a1)"/>
+    <line x1="145" y1="296" x2="145" y2="316"/>
+    <line x1="445" y1="296" x2="445" y2="316"/>
+    <line x1="71" y1="316" x2="519" y2="316"/>
+    <line x1="71" y1="316" x2="71" y2="334" marker-end="url(#a1)"/>
+    <line x1="183" y1="316" x2="183" y2="334" marker-end="url(#a1)"/>
+    <line x1="295" y1="316" x2="295" y2="334" marker-end="url(#a1)"/>
+    <line x1="407" y1="316" x2="407" y2="334" marker-end="url(#a1)"/>
+    <line x1="519" y1="316" x2="519" y2="334" marker-end="url(#a1)"/>
+  </g>
+  <text x="99" y="73" font-size="10" fill="#475569" text-anchor="end">submit turn</text>
+  <text x="296" y="262" font-size="10" fill="#475569" text-anchor="middle">invokes</text>
+  <text x="676" y="64" font-size="10" fill="#475569">stream /</text>
+  <text x="676" y="77" font-size="10" fill="#475569">replay</text>
+
+  <g stroke="#64748B" stroke-width="1.2">
+    <rect x="20" y="10" width="170" height="44" rx="6" fill="#F1F5F9"/>
+    <rect x="210" y="10" width="170" height="44" rx="6" fill="#F1F5F9"/>
+    <rect x="400" y="10" width="170" height="44" rx="6" fill="#F1F5F9"/>
+  </g>
+  <text x="105" y="29" text-anchor="middle" font-weight="bold">Web UI (Next.js)</text>
+  <text x="105" y="45" text-anchor="middle" font-size="10.5">WebSocket /ws · FastAPI</text>
+  <text x="295" y="29" text-anchor="middle" font-weight="bold">Command line</text>
+  <text x="295" y="45" text-anchor="middle" font-size="10.5">Typer CLI</text>
+  <text x="485" y="29" text-anchor="middle" font-weight="bold">Python SDK</text>
+  <text x="485" y="45" text-anchor="middle" font-size="10.5">application facade</text>
+
+  <g stroke="#4F46E5" stroke-width="1.4" fill="#EEF2FF">
+    <rect x="20" y="86" width="550" height="48" rx="6"/>
+    <rect x="20" y="164" width="550" height="48" rx="6"/>
+  </g>
+  <text x="295" y="106" text-anchor="middle" font-weight="bold">TurnApplicationService</text>
+  <text x="295" y="123" text-anchor="middle" font-size="10.5">persists turns · de-duplicates submissions · one active turn per session · cancel / regenerate</text>
+  <text x="295" y="184" text-anchor="middle" font-weight="bold">TurnEngine → ChatOrchestrator</text>
+  <text x="295" y="201" text-anchor="middle" font-size="10.5">routes a UnifiedContext to the selected capability (default: chat) with a per-turn StreamBus</text>
+
+  <g stroke="#0D9488" stroke-width="1.4" fill="#ECFDF5">
+    <rect x="20" y="242" width="250" height="54" rx="6"/>
+    <rect x="320" y="242" width="250" height="54" rx="6"/>
+  </g>
+  <text x="145" y="263" text-anchor="middle" font-weight="bold">ToolRegistry · Level 1</text>
+  <text x="145" y="281" text-anchor="middle" font-size="10.5">8 user-toggleable + 28 context-gated tools</text>
+  <text x="445" y="263" text-anchor="middle" font-weight="bold">CapabilityRegistry · Level 2</text>
+  <text x="445" y="281" text-anchor="middle" font-size="10.5">11 capabilities declared by 25 modules</text>
+
+  <g stroke="#64748B" stroke-width="1.2" fill="#F8FAFC">
+    <rect x="20" y="336" width="102" height="52" rx="6"/>
+    <rect x="132" y="336" width="102" height="52" rx="6"/>
+    <rect x="244" y="336" width="102" height="52" rx="6"/>
+    <rect x="356" y="336" width="102" height="52" rx="6"/>
+    <rect x="468" y="336" width="102" height="52" rx="6"/>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <text x="71" y="358" font-weight="bold">LLM providers</text><text x="71" y="375" font-size="10">cloud or local</text>
+    <text x="183" y="358" font-weight="bold">Knowledge</text><text x="183" y="375" font-size="10">RAG pipelines</text>
+    <text x="295" y="358" font-weight="bold">Memory</text><text x="295" y="375" font-size="10">L1 · L2 · L3</text>
+    <text x="407" y="358" font-weight="bold">Learning store</text><text x="407" y="375" font-size="10">mastery state</text>
+    <text x="519" y="358" font-weight="bold">Session store</text><text x="519" y="375" font-size="10">SQLite</text>
+  </g>
+
+  <g stroke="#EA580C" stroke-width="1.4" fill="#FFF7ED">
+    <rect x="600" y="86" width="140" height="48" rx="6"/>
+    <rect x="600" y="164" width="140" height="48" rx="6"/>
+  </g>
+  <text x="670" y="106" text-anchor="middle" font-weight="bold">Turn event log</text>
+  <text x="670" y="123" text-anchor="middle" font-size="10.5">persisted, sequenced</text>
+  <text x="670" y="184" text-anchor="middle" font-weight="bold">StreamBus</text>
+  <text x="670" y="201" text-anchor="middle" font-size="10.5">per-turn fan-out</text>
+</svg>
+<figcaption>Fig. 1. Runtime architecture. Requests flow down the centre column; streaming events flow back up the
+right column. Counts are taken from the code base (Section 7).</figcaption>
+</figure>
+
+<h2>3. System Architecture</h2>
+
+<h3>3.1 Entry points and the turn service</h3>
+<p>The system has three entry points (Fig. 1): a command-line interface built with Typer, a unified WebSocket
+endpoint served by FastAPI and used by the Next.js web interface, and a Python SDK facade. All three submit work
+to a single <span class="mono">TurnApplicationService</span>. A <em>turn</em> is one learner message together
+with everything the system does in response. The service persists each turn before it runs. It computes a
+SHA-256 digest of the submitted payload, excluding session and workspace identifiers, so that a repeated
+submission is recognised. A runtime coordinator allows at most one active turn per session. The service also
+supports cancellation, regeneration of the last turn and answers to questions the tutor asked mid-turn. Clients
+subscribe to a turn's events from any sequence number, so a browser that reconnects can resume a running turn
+without losing output.</p>
+
+<h3>3.2 Turn engine and orchestrator</h3>
+<p>The <span class="mono">TurnEngine</span> constructs a <span class="mono">ChatOrchestrator</span> lazily, which
+keeps model providers and plugins out of process start-up, and runs it inside a memory-reclamation scope. For each
+turn the orchestrator (i) assigns a session identifier if none was given; (ii) checks that the knowledge module is
+installed when knowledge bases are selected; (iii) chooses the capability: a hand-off capability when a partner or
+connected agent is to answer, otherwise the capability the learner selected, defaulting to <em>chat</em>; (iv)
+runs it with a fresh <span class="mono">StreamBus</span>; and (v) publishes a completion event carrying the
+capability's output. An unknown capability produces an error event followed by a terminal event rather than an
+exception, so every client sees a well-formed end to every turn.</p>
+
+<h3>3.3 A single context object</h3>
+<p>Every entry point is normalised to one dataclass, <span class="mono">UnifiedContext</span>. It carries the
+session identifier, the learner's message, the conversation history in the OpenAI message format, the enabled
+tools, the selected capability, the selected knowledge bases, attachments, per-request configuration overrides
+and the response language, together with runtime hooks such as a callback that waits for the learner's reply.
+Because the orchestrator only ever sees this object, the same capability code serves the terminal, the browser
+and the SDK.</p>
+
+<h3>3.4 Two-layer plugin model</h3>
+<p><em>Level 1, tools.</em> A tool subclasses <span class="mono">BaseTool</span>. It exposes a
+<span class="mono">ToolDefinition</span> that converts to an OpenAI function-calling schema, an asynchronous
+<span class="mono">execute</span> method returning a <span class="mono">ToolResult</span>, and prompt hints in
+each supported language that tell the model when the tool is useful. Eight tools are switched on or off by the
+learner (Table III). A further 28 are mounted automatically when the context calls for them: for example
+<span class="mono">rag</span> when a knowledge base is attached, memory and notebook tools,
+<span class="mono">ask_user</span> for questions back to the learner, a sandboxed <span class="mono">exec</span>,
+<span class="mono">web_fetch</span>, reminders and mastery navigation.</p>
+<p><em>Level 2, capabilities.</em> A capability subclasses <span class="mono">TurnCapability</span>. It declares a
+<span class="mono">CapabilityManifest</span> (name, description, stages, tools used, command-line aliases, request
+schema and configuration defaults) and implements one asynchronous <span class="mono">run(context, stream)</span>
+method. Capabilities are declared in 25 module manifests and imported only when used, so an optional module can be
+disabled without affecting the core. All capabilities report their result through one helper,
+<span class="mono">emit_capability_result</span>, so every turn ends with the same envelope: the response payload
+and a cost summary from a usage tracker.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table I. Stream event types</div>
+<table>
+<thead><tr><th>Purpose</th><th>Event types</th></tr></thead>
+<tbody>
+<tr><td>Lifecycle</td><td><span class="mono">session, session_meta, stage_start, stage_end, done</span></td></tr>
+<tr><td>Reasoning and progress</td><td><span class="mono">thinking, observation, progress</span></td></tr>
+<tr><td>Tool use</td><td><span class="mono">tool_call, tool_result</span></td></tr>
+<tr><td>Output</td><td><span class="mono">content, sources, result</span></td></tr>
+<tr><td>Control and errors</td><td><span class="mono">wait_for_input, error</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>3.5 Streaming event protocol</h3>
+<p>Everything a turn produces is a <span class="mono">StreamEvent</span>: a type (Table I), the source tool or
+capability, the current stage, a text payload, structured metadata, the session and turn identifiers, a
+monotonically increasing sequence number and a timestamp. A capability wraps each pipeline stage in an
+asynchronous context manager that emits paired <span class="mono">stage_start</span> and
+<span class="mono">stage_end</span> events. The orchestrator emits; the turn runtime persists; adapters render,
+as Rich output in the terminal, React components in the browser or JSON for the SDK (Fig. 2). Because production,
+persistence and presentation are separate, replay after a reconnection works the same way for every client.</p>
+
+<figure class="wide">
+<svg viewBox="0 0 770 330" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif" font-size="11.5" role="img" aria-label="Turn lifecycle">
+  <defs>
+    <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+  </defs>
+  <g stroke="#64748B" stroke-width="1.2" fill="#F1F5F9">
+    <rect x="10" y="8" width="120" height="30" rx="5"/>
+    <rect x="170" y="8" width="120" height="30" rx="5"/>
+    <rect x="330" y="8" width="120" height="30" rx="5"/>
+    <rect x="490" y="8" width="120" height="30" rx="5"/>
+    <rect x="640" y="8" width="120" height="30" rx="5"/>
+  </g>
+  <g text-anchor="middle" font-weight="bold">
+    <text x="70" y="28">Client</text><text x="230" y="28">Turn service</text><text x="390" y="28">Orchestrator</text>
+    <text x="550" y="28">Capability</text><text x="700" y="28">StreamBus</text>
+  </g>
+  <g stroke="#94A3B8" stroke-width="1" stroke-dasharray="4 4">
+    <line x1="70" y1="38" x2="70" y2="322"/><line x1="230" y1="38" x2="230" y2="322"/>
+    <line x1="390" y1="38" x2="390" y2="322"/><line x1="550" y1="38" x2="550" y2="322"/>
+    <line x1="700" y1="38" x2="700" y2="322"/>
+  </g>
+  <g stroke="#334155" stroke-width="1.3">
+    <line x1="70" y1="62" x2="228" y2="62" marker-end="url(#a2)"/>
+    <line x1="230" y1="118" x2="388" y2="118" marker-end="url(#a2)"/>
+    <line x1="390" y1="146" x2="548" y2="146" marker-end="url(#a2)"/>
+    <line x1="550" y1="206" x2="698" y2="206" marker-end="url(#a2)"/>
+    <line x1="390" y1="236" x2="698" y2="236" marker-end="url(#a2)"/>
+    <line x1="70" y1="282" x2="228" y2="282" marker-end="url(#a2)"/>
+  </g>
+  <g stroke="#334155" stroke-width="1.3" stroke-dasharray="6 4">
+    <line x1="700" y1="262" x2="232" y2="262" marker-end="url(#a2)"/>
+    <line x1="230" y1="310" x2="72" y2="310" marker-end="url(#a2)"/>
+  </g>
+  <g stroke="#94A3B8" fill="#F8FAFC">
+    <rect x="238" y="74" width="140" height="24" rx="4"/>
+    <rect x="558" y="160" width="128" height="24" rx="4"/>
+  </g>
+  <g font-size="10.5" fill="#0F172A" paint-order="stroke" stroke="#ffffff" stroke-width="4" stroke-linejoin="round">
+    <text x="149" y="56" text-anchor="middle">start_turn(request)</text>
+    <text x="308" y="90" text-anchor="middle">persist turn, check digest</text>
+    <text x="309" y="112" text-anchor="middle">execute(UnifiedContext)</text>
+    <text x="469" y="140" text-anchor="middle">run(context, stream)</text>
+    <text x="622" y="176" text-anchor="middle">tool calls (Level 1)</text>
+    <text x="625" y="200" text-anchor="middle">stage · thinking · content</text>
+    <text x="470" y="230" text-anchor="middle">result · done</text>
+    <text x="466" y="256" text-anchor="middle">events with sequence numbers are persisted</text>
+    <text x="149" y="276" text-anchor="middle">subscribe(turn, after_seq)</text>
+    <text x="151" y="304" text-anchor="middle">live and replayed events</text>
+  </g>
+</svg>
+<figcaption>Fig. 2. Lifecycle of one turn. A client that disconnects can resubscribe from its last sequence number
+and receives the remaining events without loss.</figcaption>
+</figure>
+
+<h2>4. Capabilities</h2>
+
+<p>Table II lists the eleven built-in capabilities and their stages. <em>Chat</em> is the default: an agent loop
+that may call tools while exploring, followed by a separate stage that streams the final answer. <em>Ask
+questions</em> routes the same loop through <span class="mono">ask_user</span> to fill in missing context first,
+and <em>deep solve</em> adds problem-planning tools to it. <em>Deep question</em> generates practice items in
+template batches. <em>Deep research</em> rephrases the question, decomposes it into subtopics, researches each
+with tools and writes an iterative report. <em>Visualize</em> analyses the request, generates an SVG, Chart.js,
+Mermaid or HTML artefact and reviews it, or hands off to Manim stages for animation; <em>math animator</em>
+includes a code-retry stage that repairs Manim code that fails to render. <em>Video lesson</em> writes a Remotion
+lesson with narration that plays in the browser. <em>Mastery path</em> drives Guided Learning (Section 5.3).
+<em>Immersive reading</em> reads a document or a video with the learner and cites the page or timestamp behind
+each answer, and <em>audio overview</em> turns a knowledge base into a two-voice audio summary.</p>
+
+<div class="table-wrap wide">
+<div class="tcap">Table II. Built-in capabilities</div>
+<table>
+<thead><tr><th>Capability</th><th>Module</th><th>Stages</th></tr></thead>
+<tbody>
+<tr><td>chat</td><td>core</td><td>exploring → responding</td></tr>
+<tr><td>ask_questions</td><td>core</td><td>responding (loop forced through ask_user)</td></tr>
+<tr><td>deep_solve</td><td>solve</td><td>responding (loop with solve-planning tools)</td></tr>
+<tr><td>deep_question</td><td>questions</td><td>ideation → generation</td></tr>
+<tr><td>deep_research</td><td>research</td><td>rephrasing → decomposing → researching → reporting</td></tr>
+<tr><td>visualize</td><td>visualize</td><td>analyzing → generating → reviewing (or Manim stages)</td></tr>
+<tr><td>math_animator</td><td>renderer-manim</td><td>concept_analysis → concept_design → code_generation → code_retry → summary → render_output</td></tr>
+<tr><td>video_lesson</td><td>video-lesson</td><td>code_generation → render_check → render_output</td></tr>
+<tr><td>mastery_path</td><td>mastery</td><td>responding (loop with mastery tools)</td></tr>
+<tr><td>immersive_reading</td><td>reading</td><td>responding (document- or timestamp-grounded)</td></tr>
+<tr><td>audio_overview</td><td>audio-overview</td><td>retrieving → script_writing → voice_generation → publishing</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="table-wrap">
+<div class="tcap">Table III. Tools the learner can switch on</div>
+<table>
+<thead><tr><th>Tool</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>brainstorm</td><td>Breadth-first idea exploration</td></tr>
+<tr><td>web_search</td><td>Web search with citations</td></tr>
+<tr><td>paper_search</td><td>arXiv preprint search</td></tr>
+<tr><td>zotero_search</td><td>Search a Zotero library</td></tr>
+<tr><td>reason</td><td>Dedicated deep-reasoning call</td></tr>
+<tr><td>geogebra_analysis</td><td>Math images to GeoGebra commands</td></tr>
+<tr><td>imagegen</td><td>Image generation</td></tr>
+<tr><td>videogen</td><td>Video generation</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>5. Knowledge, Memory and Mastery</h2>
+
+<h3>5.1 Knowledge bases</h3>
+<p>Learners build knowledge bases from their own documents. Parsing engines (Docling, MarkItDown,
+PyMuPDF4LLM, LiteParse and MinerU) convert files to text, and indexing and retrieval are provided by pluggable
+pipelines: LlamaIndex, LightRAG [9], GraphRAG and PageIndex for local indexes, and connectors to Kiwix,
+WeKnora and Tencent IMA for collections that live elsewhere. When a knowledge base is attached to a turn, the
+<span class="mono">rag</span> tool is mounted and retrieved passages are reported to the client as
+<span class="mono">sources</span> events, so answers can be traced to the learner's material.</p>
+
+<h3>5.2 Three-layer memory</h3>
+<p>Memory is organised in three layers. Layer 1 is an append-only trace, one JSON-lines file per surface (chat,
+book, and so on) per day. Layer 2 holds one Markdown summary per surface. Layer 3 holds cross-surface documents in
+four slots: <em>recent</em>, <em>profile</em>, <em>scope</em> and <em>preferences</em>. A consolidator distils
+traces into the higher layers with LLM prompts for updating, de-duplicating and auditing them, and the agent
+reads and writes memory through dedicated tools. Because every layer above the trace is plain Markdown, the
+learner can inspect and correct what the system believes about them, which addresses part of the privacy and
+transparency concerns raised in [10].</p>
+
+<h3>5.3 Mastery estimation</h3>
+<p>Guided Learning tracks a mastery score <i>m</i> ∈ [0, 1] for each knowledge point. Let
+<i>c</i><sub>1</sub>, …, <i>c</i><sub><i>k</i></sub> be the outcomes of the last <i>k</i> ≤ 5 attempts, oldest
+first, each in [0, 1] so that partial credit is possible, and let <b>w</b> = (0.5, 0.7, 0.85, 0.95, 1.0) be
+recency weights aligned so that the newest attempt has weight 1.0. Then</p>
+<div class="eq">
+<math display="block">
+  <mi>m</mi><mo>=</mo><mi>min</mi><mo>(</mo>
+  <mfrac>
+    <mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover>
+      <msub><mi>w</mi><mrow><mn>5</mn><mo>−</mo><mi>k</mi><mo>+</mo><mi>i</mi></mrow></msub><msub><mi>c</mi><mi>i</mi></msub></mrow>
+    <mrow><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>k</mi></munderover>
+      <msub><mi>w</mi><mrow><mn>5</mn><mo>−</mo><mi>k</mi><mo>+</mo><mi>i</mi></mrow></msub></mrow>
+  </mfrac><mo>,</mo><mspace width="0.3em"/><mi>κ</mi><mo>(</mo><mi>k</mi><mo>)</mo><mo>)</mo>
+</math>
+<span class="tag">(1)</span>
+</div>
+<p class="noindent">where the confidence cap is κ(1) = 0.5, κ(2) = 0.8 and κ(<i>k</i>) = 1 for <i>k</i> ≥ 3. The
+cap prevents one or two lucky answers from declaring a point mastered, and the weights reward recovery after
+early mistakes. Table IV shows values computed with the system's own implementation.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table IV. Mastery scores from Eq. (1)</div>
+<table>
+<thead><tr><th>Attempt outcomes (oldest → newest)</th><th class="num">m</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="num">0.50</td></tr>
+<tr><td>1, 1</td><td class="num">0.80</td></tr>
+<tr><td>1, 1, 1</td><td class="num">1.00</td></tr>
+<tr><td>0, 0, 1, 1, 1</td><td class="num">0.70</td></tr>
+<tr><td>1, 1, 1, 0, 0</td><td class="num">0.51</td></tr>
+<tr><td>0.5, 0.5, 0.5</td><td class="num">0.50</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Compared with BKT [4], the rule has no parameters to fit and is easy to explain to a learner, but it does not
+model guessing or slipping, and it cannot share evidence between related skills. The implementation isolates the
+rule in a single function, so a fitted BKT or item-response model could replace it without changing any caller.</p>
+
+<h2>6. Adaptation for Local Deployment</h2>
+
+<h3>6.1 Requirements</h3>
+<p>We set four requirements: (R1) the system runs from a source checkout on one machine, with no container
+runtime; (R2) it installs and starts on Windows as well as macOS; (R3) it has a distinct product identity while
+keeping the licence and attribution that Apache-2.0 requires; and (R4) no tested behaviour regresses.</p>
+
+<h3>6.2 Repository reduction</h3>
+<p>We removed files that a local installation never uses (Table V). The rule was conservative: a file was removed
+only if nothing in the backend, the command line, the frontend source or the build configuration referred to it,
+which we checked with <span class="mono">git grep</span> before each deletion. Tests that existed solely to check
+removed files were removed too: 54 tests in seven files, plus three assertions that read the deleted Dockerfile and
+documentation. A plugin example that the test suite still loads was moved into the test fixtures rather than
+deleted. Every module, capability, tool and interface language was kept, along with the experimental TypeScript
+chat engine and the memory-evaluation harness. The number of tracked files fell from 4,530 to 4,229, including the
+five files this work adds.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table V. Files removed, by category</div>
+<table>
+<thead><tr><th>Category</th><th class="num">Files</th></tr></thead>
+<tbody>
+<tr><td>README assets, translations, release notes</td><td class="num">176</td></tr>
+<tr><td>Electron desktop application</td><td class="num">51</td></tr>
+<tr><td>Developer handbook</td><td class="num">27</td></tr>
+<tr><td>CI workflows and issue templates</td><td class="num">16</td></tr>
+<tr><td>Community and agent documents, hooks</td><td class="num">10</td></tr>
+<tr><td>Docker and Compose deployment</td><td class="num">9</td></tr>
+<tr><td>Repository maintenance scripts</td><td class="num">7</td></tr>
+<tr><td>Tests of removed infrastructure</td><td class="num">7</td></tr>
+<tr><td>Compatibility wheel</td><td class="num">3</td></tr>
+<tr><td><b>Total</b></td><td class="num"><b>306</b></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>6.3 Renaming the product</h3>
+<p>The web interface uses natural-language translation keys: the English sentence is itself the key, as in
+<span class="mono">t("Uploaded to DeepTutor")</span>. Changing only the displayed values would leave keys out of
+step with the source, and changing only the source would break look-ups in the ten other languages. We therefore
+applied one regular expression, <span class="mono nowrap">(?&lt;![/\w-])DeepTutor\b</span>, to keys and values in all
+eleven catalogues and to string literals in the frontend source and tests (1,755 replacements in 78 files). Every
+key stays matched, and URLs such as <span class="mono">HKUDS/DeepTutor</span> are untouched. One sentence that
+describes the upstream update channel was afterwards restored to name DeepTutor, because the version check still
+consults upstream releases.</p>
+<p>In the backend we renamed the product in prompt templates (84 replacements in 62 files), in user-facing Python
+string literals (157 in 64 files) and in command-line help (10 in 7 files). Docstrings and identifiers were
+excluded: the brand followed by "/", "-" or "::" (User-Agent strings, header-style identifiers and Anki deck
+prefixes), the OAuth client name and the Codex originator. On review we also reverted two header values sent to
+model providers, so that upstream attribution with those providers is unchanged. The assistant's persona now
+reads "You are LearnLoop, … built on the open-source DeepTutor project", so the assistant answers honestly when
+asked who built it. New logo artwork was generated and passed through the repository's existing asset pipeline,
+which produces every web size and favicon. The internal package name <span class="mono">deeptutor</span>, with
+about 20,000 references in 2,400 files, was deliberately kept: renaming it has no user-visible benefit and the
+highest risk of regression. A <span class="mono">learnloop</span> command was added as an alias. The licence,
+copyright notices, citation file and contributor list are retained, and a new NOTICE file credits DeepTutor and
+lists the changes, as Apache-2.0 §4 requires.</p>
+
+<h3>6.4 Windows setup</h3>
+<p>We added two batch files. <span class="mono">setup.bat</span> finds Python 3.11–3.14 through the Windows
+<span class="mono">py</span> launcher (preferring 3.12), checks for Node.js 22 or newer, creates a virtual
+environment, installs the Python requirements (which add <span class="mono">pywin32</span> on Windows through an
+environment marker) and the package in editable mode, and installs the web dependencies with
+<span class="mono">npm ci --legacy-peer-deps</span>, a flag the launcher's own fallback install omits.
+<span class="mono">start.bat</span> runs <span class="mono">learnloop start</span>, which builds the Next.js
+production bundle on first run and then supervises the backend and frontend. The launcher already starts child
+processes in their own Windows process groups so that they can be shut down cleanly. Batch files are stored with
+CRLF line endings through a <span class="mono">.gitattributes</span> rule, since <span class="mono">cmd.exe</span>
+can mis-parse labels in files with LF endings.</p>
+
+<h3>6.5 Data and network exposure</h3>
+<p>All learner data, including API keys, chat history, knowledge bases and memory, lives under
+<span class="mono">data/</span> on the local disk. For fully offline use the system can call a local model server
+(Ollama, LM Studio, llama.cpp or vLLM). The servers listen on all network interfaces and login is disabled by
+default, so on a shared network such as campus Wi-Fi the operating-system firewall is the only boundary; the
+README therefore tells users to decline firewall access on public networks.</p>
+
+<h2>7. Evaluation</h2>
+
+<h3>7.1 Method</h3>
+<p>We evaluated requirement R4 by regression testing. The baseline is the unmodified upstream 1.7.2 checkout; the
+adapted tree is LearnLoop. Both were tested on the same machine with the same commands: an Apple M3 Pro with 18 GB
+of memory, macOS 26.6.2, Python 3.13.7, Node.js 24.18.0 and Chrome 157. The Python suite (the
+<span class="mono">tests/</span> directory and in-package learning tests) ran under pytest with eight parallel
+workers. The frontend checks were contract generation, dependency-architecture rules, type checking, the Node and
+Vitest suites, lint, translation parity and audit, and a production build.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table VI. Regression results</div>
+<table>
+<thead><tr><th>Check</th><th class="num">Upstream</th><th class="num">LearnLoop</th></tr></thead>
+<tbody>
+<tr><td>Python tests passed</td><td class="num">12,688</td><td class="num">12,631</td></tr>
+<tr><td>Python tests failed*</td><td class="num">19</td><td class="num">19</td></tr>
+<tr><td>Python tests skipped</td><td class="num">124</td><td class="num">124</td></tr>
+<tr><td>Vitest tests passed</td><td class="num">1,212 / 1,212</td><td class="num">1,212 / 1,212</td></tr>
+<tr><td>Node tests passed</td><td class="num">1,349 / 1,349</td><td class="num">1,348 / 1,348</td></tr>
+<tr><td>Type check</td><td class="num">pass</td><td class="num">pass</td></tr>
+<tr><td>Lint errors (warnings)</td><td class="num">0 (58)</td><td class="num">0 (58)</td></tr>
+<tr><td>Architecture rules (1,081 modules)</td><td class="num">pass</td><td class="num">pass</td></tr>
+<tr><td>Contracts, i18n parity and audit</td><td class="num">pass</td><td class="num">pass</td></tr>
+<tr><td>Production web build</td><td class="num">pass</td><td class="num">pass</td></tr>
+</tbody>
+</table>
+<div style="font-size:8pt;margin-top:1mm;text-align:left">* The same 19 tests in both trees (module-lifecycle and
+migration tests); see Section 7.2.</div>
+</div>
+
+<h3>7.2 Results</h3>
+<p>Table VI summarises the results. The adapted tree introduced no new test failure. The 57 fewer passing Python
+tests are exactly those removed with the infrastructure they checked (Section 6.2): 54 in seven deleted files and
+three trimmed assertions. The one fewer Node test checked the deleted Dockerfile. The 19 failures are identical in
+both trees and environmental: an instance of the application was running on the test machine and held the lock
+that guards changes to installed modules, so module-lifecycle tests stopped with "Environment is in use".
+Re-running them serially in the upstream tree reproduced the same failures. Tests that asserted the old product name failed as
+expected after the rename; we updated those assertions to the new user-facing text. Two Vitest
+cases failed once while the Python suite ran in parallel and passed on re-run, which we attribute to
+timing under CPU contention.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table VII. Code base after adaptation</div>
+<table>
+<thead><tr><th>Component</th><th class="num">Files</th><th class="num">Lines</th></tr></thead>
+<tbody>
+<tr><td>Backend Python (excl. tests)</td><td class="num">1,127</td><td class="num">313,836</td></tr>
+<tr><td>Command-line Python</td><td class="num">24</td><td class="num">6,685</td></tr>
+<tr><td>Frontend TypeScript (excl. tests)</td><td class="num">1,053</td><td class="num">227,694</td></tr>
+<tr><td>Prompt templates</td><td class="num">201</td><td class="num">8,648</td></tr>
+<tr><td>TypeScript chat engine</td><td class="num">29</td><td class="num">5,185</td></tr>
+<tr><td>Python tests</td><td class="num">1,009</td><td class="num">242,026</td></tr>
+<tr><td>Frontend tests</td><td class="num">468</td><td class="num">61,611</td></tr>
+</tbody>
+</table>
+<div style="font-size:8pt;margin-top:1mm;text-align:left">Lines include comments and blank lines; generated
+API contracts are excluded.</div>
+</div>
+
+<h3>7.3 Start-up cost</h3>
+<p>We measured cold start-up as the median of five runs on the machine described above (Table VIII). The command
+line starts in under half a second because providers and plugins are imported lazily; importing the whole backend
+application takes about one second.</p>
+
+<div class="table-wrap">
+<div class="tcap">Table VIII. Start-up time, median of 5 runs</div>
+<table>
+<thead><tr><th>Operation</th><th class="num">Median</th><th class="num">Range</th></tr></thead>
+<tbody>
+<tr><td><span class="mono">learnloop --help</span></td><td class="num">0.37 s</td><td class="num">0.36–0.55 s</td></tr>
+<tr><td>Import backend application</td><td class="num">1.01 s</td><td class="num">0.98–1.08 s</td></tr>
+<tr><td>Import orchestrator only</td><td class="num">0.14 s</td><td class="num">0.14–0.14 s</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>7.4 End-to-end check</h3>
+<p>In a browser we confirmed that the interface shows the new name and logo, and that the About page shows the
+DeepTutor credit with its licence. We then ran one real conversation through the command line with a cloud model
+(GPT-4.1) and asked the assistant its name and origin. The turn completed with the expected event sequence
+(session, stage, progress, 27 content events, result, done), and the assistant answered: "My name is LearnLoop,
+and I am based on the open-source DeepTutor project developed by the Data Intelligence Lab at HKU."</p>
+
+<h2>8. Limitations and Future Work</h2>
+
+<p><em>No learner study.</em> This report evaluates software behaviour, not learning. We propose a study with two
+groups of students working on one course topic, one using LearnLoop with the course material as a knowledge base
+and one using the same material with a general-purpose chatbot. Pre- and post-tests would give a normalised
+learning gain, the System Usability Scale would measure usability, and interaction logs would show which
+capabilities students use. Such a study needs ethics approval and informed consent; a local deployment helps, since
+each participant's data stays on their own machine.</p>
+<p><em>Windows validated by review.</em> The batch files and the launcher's Windows code paths were reviewed but,
+at the time of writing, not executed on Windows hardware.</p>
+<p><em>Model dependence.</em> Answer quality, cost and latency depend on the chosen model. Retrieval reduces but
+does not remove fabricated content, and a tutor that answers too readily can encourage over-reliance [10].</p>
+<p><em>Security.</em> The network exposure described in Section 6.5 should be addressed by binding to the loopback
+interface by default or by enabling login.</p>
+<p><em>Learner model.</em> Eq. (1) is transparent but simple; replacing it with a fitted BKT model [4] and
+comparing the two on logged data is a natural next step.</p>
+<p><em>Upstream drift.</em> A fork does not receive upstream fixes automatically. Because internal package names
+were kept, upstream changes can still be merged with few conflicts.</p>
+
+<h2>9. Conclusion</h2>
+<p>We analysed the architecture of DeepTutor, an open-source agentic tutoring system, and adapted it into
+LearnLoop, a local installation for Windows and macOS with its own identity. A durable turn service, a two-layer
+plugin model and a typed event protocol let one code path serve three kinds of client, while retrieval, layered
+memory and a simple mastery model support personalised tutoring. A conservative reduction of 306 files, a
+key-consistent rename and one-step setup scripts made the system easy to install, and regression testing against
+the upstream release found no change in tested behaviour. The main open question is educational rather than
+technical: whether learners actually learn more with it, which the proposed study is designed to answer.</p>
+
+<h2>Acknowledgments</h2>
+<p class="ack">LearnLoop is a modified version of DeepTutor. We thank its authors, B. Zhao, J. Zhang, X. Ren,
+Z. Guo, T. Chu, Y. Ma and C. Huang, and the Data Intelligence Lab at The University of Hong Kong for releasing it
+under the Apache License 2.0; Sections 3–5 describe their design. Portions of the adaptation and of this report
+were prepared with the help of an AI coding assistant (Claude). All measurements were obtained by running the
+software.</p>
+
+<h2>References</h2>
+<ol class="refs">
+  <li>B. Zhao, J. Zhang, X. Ren, Z. Guo, T. Chu, Y. Ma, and C. Huang, "DeepTutor: Towards agentic personalized
+      tutoring," arXiv:2604.26962, 2026.</li>
+  <li>B. S. Bloom, "The 2 sigma problem: The search for methods of group instruction as effective as one-to-one
+      tutoring," <i>Educational Researcher</i>, vol. 13, no. 6, pp. 4–16, 1984.</li>
+  <li>K. VanLehn, "The relative effectiveness of human tutoring, intelligent tutoring systems, and other tutoring
+      systems," <i>Educational Psychologist</i>, vol. 46, no. 4, pp. 197–221, 2011.</li>
+  <li>A. T. Corbett and J. R. Anderson, "Knowledge tracing: Modeling the acquisition of procedural knowledge,"
+      <i>User Modeling and User-Adapted Interaction</i>, vol. 4, no. 4, pp. 253–278, 1994.</li>
+  <li>P. Lewis <i>et al.</i>, "Retrieval-augmented generation for knowledge-intensive NLP tasks," in
+      <i>Advances in Neural Information Processing Systems</i>, 2020.</li>
+  <li>J. Wei <i>et al.</i>, "Chain-of-thought prompting elicits reasoning in large language models," in
+      <i>Advances in Neural Information Processing Systems</i>, 2022.</li>
+  <li>S. Yao <i>et al.</i>, "ReAct: Synergizing reasoning and acting in language models," in <i>International
+      Conference on Learning Representations</i>, 2023.</li>
+  <li>T. Schick <i>et al.</i>, "Toolformer: Language models can teach themselves to use tools," in <i>Advances in
+      Neural Information Processing Systems</i>, 2023.</li>
+  <li>Z. Guo, L. Xia, Y. Yu, T. Ao, and C. Huang, "LightRAG: Simple and fast retrieval-augmented generation,"
+      arXiv:2410.05779, 2024.</li>
+  <li>E. Kasneci <i>et al.</i>, "ChatGPT for good? On opportunities and challenges of large language models for
+      education," <i>Learning and Individual Differences</i>, vol. 103, art. 102274, 2023.</li>
+</ol>
+
+</div>
+</body>
+</html>

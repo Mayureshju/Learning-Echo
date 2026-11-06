@@ -18,17 +18,10 @@ def project(path="pyproject.toml"):
     return tomllib.loads((ROOT / path).read_text(encoding="utf-8"))["project"]
 
 
-def test_core_and_cli_have_one_code_owner():
+def test_core_metadata_has_one_code_owner():
     assert project()["dependencies"] == manifests()["core"]["requirements"]
-    cli = tomllib.loads(
-        (ROOT / "packaging/deeptutor-cli/pyproject.toml").read_text(encoding="utf-8")
-    )
-    assert set(cli["project"]["dynamic"]) == {"version", "dependencies"}
     assert project_version() == __version__
-    assert cli["tool"]["setuptools"]["packages"] == []
-    assert "scripts" not in cli["project"]
-    for spec in (project(), cli["project"]):
-        assert spec["requires-python"] == ">=3.11,<3.15"
+    assert project()["requires-python"] == ">=3.11,<3.15"
 
 
 def test_generated_source_dependency_files_are_current():

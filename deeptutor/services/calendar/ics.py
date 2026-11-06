@@ -23,7 +23,7 @@ from .recurrence import Timing, parse_instant, to_wall, zone
 
 PRODID = "-//HKUDS//DeepTutor//EN"
 UID_HOST = "deeptutor"
-DEFAULT_CALENDAR_NAME = "DeepTutor"
+DEFAULT_CALENDAR_NAME = "LearnLoop"
 _FOLD = 75
 _TZ_PAD_YEARS = 1
 _TZ_MAX_SPAN = 40

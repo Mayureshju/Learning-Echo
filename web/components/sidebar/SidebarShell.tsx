@@ -304,8 +304,8 @@ export function SidebarShell({
         {/* The open sidebar's header, stood on end: the workspace (with its
             menu of settings and account), the way back out, then search. */}
         {bodySlot ? (
-          <Link href={brandHref} prefetch={false} aria-label="DeepTutor" className="dt-rail-brand">
-            <Image src="/brand/color-logo.png" alt="DeepTutor" width={22} height={22} className="h-[22px] w-[22px] rounded-md" />
+          <Link href={brandHref} prefetch={false} aria-label="LearnLoop" className="dt-rail-brand">
+            <Image src="/brand/color-logo.png" alt="LearnLoop" width={22} height={22} className="h-[22px] w-[22px] rounded-md" />
           </Link>
         ) : (
           <WorkspaceMenu compact accountSlot={renderedFooter} onNavigate={() => drawer?.close()} />
@@ -365,16 +365,16 @@ export function SidebarShell({
           <Link href={brandHref} prefetch={false} className="group flex items-center gap-1.5">
             <Image
               src="/brand/color-logo.png"
-              alt="DeepTutor"
+              alt="LearnLoop"
               width={22}
               height={22}
               className="h-[22px] w-[22px] transition-transform duration-200 group-hover:scale-105"
             />
             <Image
               src="/brand/color-word.png"
-              alt="DeepTutor"
+              alt="LearnLoop"
               width={1200}
-              height={310}
+              height={212}
               priority
               className="h-[22px] w-auto transition-transform duration-200 group-hover:scale-105"
             />

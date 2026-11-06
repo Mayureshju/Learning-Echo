@@ -16,7 +16,6 @@ import path from "node:path";
 
 // The node-test harness runs from web/ (see scripts/run-node-tests.mjs).
 const webRoot = process.cwd();
-const repoRoot = path.resolve(webRoot, "..");
 
 const read = (...parts: string[]) => readFileSync(path.join(...parts), "utf8");
 
@@ -37,28 +36,6 @@ test("npm dev scripts route through the heap-ceiling wrapper", () => {
       script,
       /--max-old-space-size/,
       `${name} passes the heap flag in argv, where the render worker never sees it`,
-    );
-  }
-});
-
-test("the container dev stage routes through the wrapper too", () => {
-  // Command lines only — prose mentions of `next dev` are not launch points.
-  const devFrontend = read(repoRoot, "Dockerfile")
-    .split("\n")
-    .filter((line) => !line.trimStart().startsWith("#"))
-    .filter(
-      (line) =>
-        line.includes("bin/next dev") || line.includes("scripts/dev.mjs"),
-    );
-  assert.ok(
-    devFrontend.length > 0,
-    "no dev frontend command found in Dockerfile",
-  );
-  for (const line of devFrontend) {
-    assert.match(
-      line,
-      /scripts\/dev\.mjs/,
-      `Dockerfile dev frontend bypasses the wrapper: ${line.trim()}`,
     );
   }
 });

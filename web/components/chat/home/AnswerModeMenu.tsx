@@ -205,7 +205,7 @@ function AnswerList({
         )}
         {answerers && (
           <TraySection title={t("composer.tray.whoAnswers")} hint={t("composer.tray.whoAnswersHint")}>
-            {matches("DeepTutor") && (
+            {matches("LearnLoop") && (
               <TrayOption
                 selected={!answerers.value}
                 onSelect={() => pick(null)}
@@ -417,7 +417,7 @@ function Budget({ value, onChange }: { value: number | null; onChange: (value: n
   const current = value ?? BUDGET_MIN;
   return (
     <div className="dt-tray-budget">
-      <span>{t("Max rounds DeepTutor may ask")}</span>
+      <span>{t("Max rounds LearnLoop may ask")}</span>
       <span className="flex items-center gap-1">
         <button
           type="button"
